@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MagnetoDamper: Precision Space Telescope Vibration Isolation (NASA SBIR)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            space: {
+              950: '#03050a',
+              900: '#05070d',
+              850: '#080c14',
+              800: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- MathJax v3 (Pre-configured) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      background-color: #03050a;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .formula-box {
+      background: #020408;
+      border: 1px solid #1e293b;
+      border-radius: 0.5rem;
+      padding: 0.85rem;
+      color: #38bdf8;
+      font-size: 0.92rem;
+      overflow-x: auto;
+      margin: 0.65rem 0;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #05070d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-gray-800/80 bg-space-900/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+          <i data-lucide="compass" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-base tracking-wide text-white">MagnetoDamper</span>
+            <span class="px-2 py-0.5 text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 rounded">NASA SBIR S1.02</span>
+            <span class="px-2 py-0.5 text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 rounded flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> TR-6 OBSERVER
+            </span>
+          </div>
+          <p class="text-xs text-gray-400">Sub-Micro-g Reaction Wheel Micro-Vibration Isolator & Inductive Bottoming-Out Observer</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2">
+        <button id="tabBtnSim" onclick="switchTab('sim')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-1.5">
+          <i data-lucide="activity" class="w-4 h-4"></i>
+          <span>Live Telemetry</span>
+        </button>
+        <button id="tabBtnPhysics" onclick="switchTab('physics')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 flex items-center gap-1.5">
+          <i data-lucide="atom" class="w-4 h-4"></i>
+          <span>Core Physics</span>
+        </button>
+        <button id="tabBtnProposal" onclick="switchTab('proposal')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 flex items-center gap-1.5">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>NASA Proposal</span>
+        </button>
+        <button id="tabBtnARR" onclick="switchTab('arr')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 flex items-center gap-1.5">
+          <i data-lucide="trending-up" class="w-4 h-4"></i>
+          <span>Commercial ARR</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Viewport -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE SIMULATION & TELEMETRY HUD      -->
+    <!-- ========================================== -->
+    <div id="viewSim" class="space-y-6">
+      
+      <!-- Top Status Banner -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3.5 backdrop-blur flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase text-gray-400 font-mono">Dynamic Force ($F$)</div>
+            <div id="statForce" class="text-xl font-bold font-mono text-cyan-400">0.00 N</div>
+            <div class="text-[11px] text-gray-500">Peak Counter-force</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-cyan-950/40 text-cyan-400 border border-cyan-800/50">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3.5 backdrop-blur flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase text-gray-400 font-mono">Voice Coil Inductance ($L$)</div>
+            <div id="statInductance" class="text-xl font-bold font-mono text-emerald-400">22.40 mH</div>
+            <div id="statInductanceDiff" class="text-[11px] text-emerald-500/80">Nominal Permeability ($\mu_r$)</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-800/50">
+            <i data-lucide="gauge" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3.5 backdrop-blur flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase text-gray-400 font-mono">RWA Wheel Speed</div>
+            <div id="statSpeed" class="text-xl font-bold font-mono text-indigo-300">3,420 RPM</div>
+            <div id="statSpeedMode" class="text-[11px] text-gray-500">Harmonic: 57.0 Hz (Bench mode: 74 Hz)</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-indigo-950/40 text-indigo-400 border border-indigo-800/50">
+            <i data-lucide="disc" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3.5 backdrop-blur flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase text-gray-400 font-mono">Observer State</div>
+            <div id="statStateBadge" class="text-base font-bold font-mono text-emerald-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span>LINEAR DAMPING</span>
+            </div>
+            <div id="statStateSub" class="text-[11px] text-gray-500">Jitter isolation: -42.8 dB</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-gray-800/60 text-gray-300 border border-gray-700/50">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Interactive Row: Canvas + F-L Phase-Space Plot -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Interactive Hardware Visualizer -->
+        <div class="lg:col-span-7 bg-space-900/80 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i>
+              <h2 class="text-sm font-semibold tracking-wide text-gray-200">Optical Bench & Reaction Wheel Voice-Coil Actuator</h2>
+            </div>
+            <div class="flex items-center space-x-2 text-xs font-mono">
+              <span class="text-gray-400">Gap Displacement:</span>
+              <span id="canvasDispText" class="text-cyan-400 font-bold">0.02 mm</span>
+            </div>
+          </div>
+
+          <!-- Physical Canvas -->
+          <div class="relative w-full h-[320px] bg-space-950 rounded-xl overflow-hidden my-3 border border-gray-850">
+            <canvas id="hardwareCanvas" class="w-full h-full block"></canvas>
+            
+            <!-- In-canvas Alert Overlay -->
+            <div id="canvasAlert" class="hidden absolute top-3 right-3 bg-red-950/80 border border-red-500 text-red-200 px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span>CORE SATURATION DETECTED: BOTTOMING IMMINENT</span>
+            </div>
+
+            <!-- Resonance Shifting Overlay -->
+            <div id="harmonicShiftAlert" class="hidden absolute bottom-3 left-3 bg-cyan-950/80 border border-cyan-500 text-cyan-200 px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur flex items-center gap-2">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
+              <span>OBSERVER AUTONOMOUS ESCAPE: RWA HARMONIC SPEED SLEW TRIGGERED</span>
+            </div>
+          </div>
+
+          <!-- Bottom Micro-Controls -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-mono">
+            <div class="bg-gray-900/50 border border-gray-800/80 p-2.5 rounded-lg">
+              <span class="text-gray-400 block mb-1">RWA Rotor Imbalance ($U_d$):</span>
+              <span id="statImbalance" class="text-white font-bold">1.25 g·cm</span>
+            </div>
+            <div class="bg-gray-900/50 border border-gray-800/80 p-2.5 rounded-lg">
+              <span class="text-gray-400 block mb-1">Optical Bench Resonant Mode:</span>
+              <span class="text-amber-400 font-bold">$f_{\text{res}} = 74.0 \text{ Hz}$</span>
+            </div>
+            <div class="bg-gray-900/50 border border-gray-800/80 p-2.5 rounded-lg">
+              <span class="text-gray-400 block mb-1">Core Saturation Flux ($B_{\text{sat}}$):</span>
+              <span class="text-red-400 font-bold">1.78 Tesla</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Primary Diagnostic $(F, L)$ Phase-Space Chart -->
+        <div class="lg:col-span-5 bg-space-900/80 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="git-commit" class="w-4 h-4 text-emerald-400"></i>
+              <h2 class="text-sm font-semibold tracking-wide text-gray-200">Diagnostic Phase-Space: $(F, L)$ Loop</h2>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-300">Live Impedance Squeeze</span>
+          </div>
+
+          <div class="relative w-full h-[320px] my-3">
+            <canvas id="flChart"></canvas>
+          </div>
+
+          <div class="text-xs text-gray-400 leading-relaxed bg-gray-950/40 p-2.5 rounded-lg border border-gray-850">
+            <span class="text-emerald-400 font-mono font-medium">Diagnostic Principle:</span> As damping force ($F$) increases, dynamic coil displacement compresses the magnetic circuit. When the ferromagnetic core enters saturation, differential inductance ($L$) abruptly flattens $\left(\frac{dL}{dF} \to 0\right)$, exposing imminent bottoming-out prior to mechanical impact.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Secondary Telemetry Plots: Jitter Attenuation & Wheel Slew Dynamics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Jitter Spectrum / Acceleration Time Series -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="waves" class="w-4 h-4 text-cyan-400"></i>
+              <span class="text-sm font-semibold text-gray-200">Optical Bench Vibration Acceleration ($\mu\text{g}$)</span>
+            </div>
+            <span id="jitterDbTag" class="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+              0.14 $\mu\text{g}$ RMS
+            </span>
+          </div>
+          <div class="h-48 w-full mt-3">
+            <canvas id="jitterChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Wheel Speed & Harmonic Slew Trajectory -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="orbit" class="w-4 h-4 text-indigo-400"></i>
+              <span class="text-sm font-semibold text-gray-200">Wheel Harmonic Tracking vs. Bench Resonance</span>
+            </div>
+            <span id="harmonicTag" class="text-xs font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-800">
+              $\Delta f_{\text{safe}} = 17.0 \text{ Hz}$
+            </span>
+          </div>
+          <div class="h-48 w-full mt-3">
+            <canvas id="harmonicChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Closed-Loop Control & Fault Injection Console -->
+      <div class="bg-space-900/90 border border-gray-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-800">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+              Closed-Loop Control & Physical Disturbance Injection
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Actuate voice-coil magnetic margins, introduce reaction wheel slew maneuvers, and test autonomous frequency skipping.</p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button id="btnAutonomous" onclick="toggleAutonomous()" class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 flex items-center gap-2">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+              <span>AUTONOMOUS SHIFT: ACTIVE</span>
+            </button>
+            <button onclick="resetTelemetry()" class="px-3 py-2 rounded-xl text-xs font-mono bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center gap-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5">
+          <!-- Slider 1: RWA Target Speed -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-gray-300">RWA Nominal Speed</span>
+              <span id="sliderSpeedVal" class="text-cyan-400 font-bold">3,420 RPM</span>
+            </div>
+            <input id="sliderSpeed" type="range" min="1200" max="5200" step="20" value="3420" oninput="updateControls()" class="w-full accent-cyan-400 bg-gray-850 rounded h-1.5 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+              <span>1,200 RPM (20 Hz)</span>
+              <span class="text-amber-500/80">Resonance: 4,440 RPM (74 Hz)</span>
+              <span>5,200 RPM (86 Hz)</span>
+            </div>
+          </div>
+
+          <!-- Slider 2: Disturbance Torque / Imbalance -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-gray-300">Reaction Wheel Dynamic Imbalance</span>
+              <span id="sliderImbalanceVal" class="text-amber-400 font-bold">1.25 g·cm</span>
+            </div>
+            <input id="sliderImbalance" type="range" min="0.2" max="6.0" step="0.05" value="1.25" oninput="updateControls()" class="w-full accent-amber-400 bg-gray-850 rounded h-1.5 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+              <span>0.2 g·cm (Spec Target)</span>
+              <span>3.0 g·cm (Degraded)</span>
+              <span>6.0 g·cm (Bearing Fault)</span>
+            </div>
+          </div>
+
+          <!-- Slider 3: Voice-Coil Controller Gain -->
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-gray-300">Active Damping Gain ($K_d$)</span>
+              <span id="sliderGainVal" class="text-emerald-400 font-bold">140 N·s/m</span>
+            </div>
+            <input id="sliderGain" type="range" min="30" max="320" step="5" value="140" oninput="updateControls()" class="w-full accent-emerald-400 bg-gray-850 rounded h-1.5 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+              <span>30 (Underdamped)</span>
+              <span>140 (Optimal Critical)</span>
+              <span>320 (High Core Load)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stress Scenario Quick Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5 pt-5 mt-2 border-t border-gray-800/60">
+          <span class="text-xs font-mono text-gray-400 mr-2">Fault Injections:</span>
+          <button onclick="injectSlewResonance()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-red-950/40 text-red-300 border border-red-800/60 hover:bg-red-900/40 transition flex items-center gap-1.5">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-400"></i>
+            <span>Inject 4,440 RPM Resonance Scan</span>
+          </button>
+          <button onclick="injectBearingRumble()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-amber-950/40 text-amber-300 border border-amber-800/60 hover:bg-amber-900/40 transition flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Simulate Bearing Cage Wear (4.5 g·cm)</span>
+          </button>
+          <button onclick="injectMagneticBottoming()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-purple-950/40 text-purple-300 border border-purple-800/60 hover:bg-purple-900/40 transition flex items-center gap-1.5">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-purple-400"></i>
+            <span>Force Direct Saturation Shock</span>
+          </button>
+          <button onclick="restoreNominal()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-cyan-950/40 text-cyan-300 border border-cyan-800/60 hover:bg-cyan-900/40 transition ml-auto flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span>Restore Nominal Orbit Telemetry</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: CORE PHYSICS & MATHEMATICAL MODEL   -->
+    <!-- ========================================== -->
+    <div id="viewPhysics" class="hidden space-y-6">
+      
+      <div class="bg-space-900/90 border border-gray-800 rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
+          <i data-lucide="atom" class="w-5 h-5 text-cyan-400"></i>
+          Electrodynamic, Permeability, and Structural Governing Equations
+        </h2>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          The MagnetoDamper operates at the intersection of non-linear magnetic saturation dynamics, Lorentz electromagnetic counter-force generation, and structural finite-element modal coupling in space telescope optical benches.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Card 1: Lorentz Force & Dynamic Differential Inductance -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-cyan-400 mb-2">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <h3 class="text-sm font-semibold tracking-wide text-white">1. Lorentz Damping & Dynamic Differential Inductance</h3>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Active voice-coil actuators generate an electromagnetic damping counter-force $F_{\text{act}}$ proportional to current $i(t)$, flux density $B$, and effective coil conductor length $l$. However, coil displacement $x(t)$ and saturation flux compress the incremental magnetic permeability $\mu_{\Delta}$:
+            </p>
+
+            <div class="formula-box">
+              $$F_{\text{act}}(t) = B(x) \cdot l \cdot i(t) = -c_d \dot{x}(t) - k_a x(t)$$
+            </div>
+            
+            <p class="text-xs text-gray-300 mt-2 leading-relaxed">
+              The coil self-inductance $L$ is a function of the dynamic reluctance $\mathcal{R}_m(x, B)$ of the magnetic circuit. As the core approaches saturation ($B \to B_{\text{sat}}$), the relative permeability $\mu_r(H) = \frac{1}{\mu_0}\frac{dB}{dH}$ drops dramatically:
+            </p>
+
+            <div class="formula-box">
+              $$L(x, i) = \frac{N^2}{\mathcal{R}_{\text{gap}}(x) + \frac{l_{\text{core}}}{\mu_0 \mu_r(H) A_{\text{core}}}} \approx \frac{L_0}{1 + \alpha x(t) + \beta \left(\frac{i}{I_{\text{sat}}}\right)^2}$$
+            </div>
+          </div>
+          <div class="text-[11px] text-gray-500 font-mono mt-3 pt-2 border-t border-gray-800">
+            Coupling: $N = 340 \text{ turns}$, $B_0 = 1.15 \text{ T}$, $I_{\text{sat}} = 2.45 \text{ A}$, $L_0 = 22.40 \text{ mH}$.
+          </div>
+        </div>
+
+        <!-- Card 2: Microscopic Ferromagnetic Core Saturation -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-emerald-400 mb-2">
+              <i data-lucide="magnet" class="w-4 h-4"></i>
+              <h3 class="text-sm font-semibold tracking-wide text-white">2. Microscopic Domain Alignment & Permeability Collapse</h3>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Ferromagnetic pole pieces (Hiperco-50A alloy) rely on spontaneous magnetic domain wall motion. Once the external magnetic excitation $H$ forces complete domain rotation along the easy axis, magnetization $M$ plateaus at the spontaneous limit $M_s$:
+            </p>
+
+            <div class="formula-box">
+              $$B(H) = \mu_0 \left( H + M_s \tanh\left(\frac{H}{H_k}\right) \right) \implies \lim_{H \to \infty} \frac{dB}{dH} = \mu_0$$
+            </div>
+            
+            <p class="text-xs text-gray-300 mt-2 leading-relaxed">
+              When $\mu_{\Delta} \to \mu_0$, the magnetic core behaves identically to vacuum. The differential inductance gradient with respect to applied force collapses to zero:
+            </p>
+
+            <div class="formula-box">
+              $$\left.\frac{\partial L}{\partial F}\right|_{\text{saturated}} \longrightarrow 0 \quad \text{while} \quad \left.\frac{\partial^2 L}{\partial F^2}\right|_{\text{knee}} \ll 0$$
+            </div>
+          </div>
+          <div class="text-[11px] text-gray-500 font-mono mt-3 pt-2 border-t border-gray-800">
+            Material: Hiperco-50A ($49\%\text{ Fe}, 49\%\text{ Co}, 2\%\text{ V}$) | $B_{\text{sat}} = 2.35 \text{ T}$ vacuum-annealed.
+          </div>
+        </div>
+
+        <!-- Card 3: The (F, L) State Observer & Bottoming-Out Inversion -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-amber-400 mb-2">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+              <h3 class="text-sm font-semibold tracking-wide text-white">3. High-Frequency Ripple Observer & Dynamic Inversion</h3>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Rather than installing fragile displacement proximity sensors inside the cryogenic optical bench envelope, the system injects an ultra-low-amplitude $10\text{ kHz}$ sinusoidal dither $v_{\text{probe}}(t) = V_d \sin(\omega_p t)$ onto the voice-coil winding:
+            </p>
+
+            <div class="formula-box">
+              $$Z_{\text{coil}}(\omega_p) = R_{\text{coil}} + j\omega_p L(x, i) \implies L_{\text{meas}} = \frac{1}{\omega_p}\sqrt{\left|\frac{V_d}{I_p}\right|^2 - R_{\text{coil}}^2}$$
+            </div>
+            
+            <p class="text-xs text-gray-300 mt-2 leading-relaxed">
+              A recursive Kalman filter tracks the $(F, L)$ trajectory. An imminent bottoming-out metric $\Psi_{\text{sat}}$ is defined by the curvature of the trajectory in phase space:
+            </p>
+
+            <div class="formula-box">
+              $$\Psi_{\text{sat}}(t) = 1.0 - \frac{L(t) - L_{\text{min}}}{L_{\text{nominal}} - L_{\text{min}}} \cdot \left[ 1 + \left| \frac{d^2 L}{d F^2} \right| \right]^{-1} \ge \Psi_{\text{crit}} = 0.82$$
+            </div>
+          </div>
+          <div class="text-[11px] text-gray-500 font-mono mt-3 pt-2 border-t border-gray-800">
+            Observer Latency: $120\ \mu\text{s}$ at $10\text{ kHz}$ injection | Zero added optical-bench harnesses.
+          </div>
+        </div>
+
+        <!-- Card 4: Structural Modal Coupling & Harmonic Avoidance -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-indigo-400 mb-2">
+              <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+              <h3 class="text-sm font-semibold tracking-wide text-white">4. Telescope Jitter Slew & Wheel Harmonic Shift</h3>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              Reaction wheel dynamic imbalance imparts centrifugal harmonic excitation forces at wheel angular frequency $\Omega_{\text{wheel}}$ and subharmonic multiples $h_k \in \{1.0, 2.0, 5.2\}$:
+            </p>
+
+            <div class="formula-box">
+              $$F_{\text{dist}}(t) = \sum_{k} U_{d,k} \cdot (h_k \Omega_{\text{wheel}})^2 \cos(h_k \Omega_{\text{wheel}} t + \phi_k)$$
+            </div>
+            
+            <p class="text-xs text-gray-300 mt-2 leading-relaxed">
+              When $\Psi_{\text{sat}} \ge 0.82$, the telescope jitter controller executes an instantaneous null-space momentum redistribution. Wheel speeds $\Omega_i$ slew within $85\text{ ms}$ away from the optical bench natural frequency $\omega_n = 2\pi (74\text{ Hz})$:
+            </p>
+
+            <div class="formula-box">
+              $$\Delta \Omega_{\text{slew}} = \text{sign}\left(\Omega - \frac{\omega_n}{h_1}\right) \cdot \Delta \Omega_{\text{min}} \quad \text{s.t.} \quad \sum_{i=1}^{4} \mathbf{h}_{\text{RWA}, i} = \mathbf{H}_{\text{telescope}} = \text{const}$$
+            </div>
+          </div>
+          <div class="text-[11px] text-gray-500 font-mono mt-3 pt-2 border-t border-gray-800">
+            Conservation Law: 4-wheel pyramid configuration ensures zero net attitude torque perturbation.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: $225,000 NASA SBIR / STTR PROPOSAL   -->
+    <!-- ========================================== -->
+    <div id="viewProposal" class="hidden space-y-6">
+      
+      <!-- Solicitation Executive Banner -->
+      <div class="bg-space-900/90 border border-cyan-500/30 rounded-2xl p-6 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-700 rounded font-semibold">NASA SBIR Phase I 2026</span>
+              <span class="px-2.5 py-0.5 text-xs font-mono bg-gray-800 text-gray-300 rounded">Topic S1.02: Precision Pointing and Vibration Isolation</span>
+            </div>
+            <h2 class="text-xl font-bold text-white tracking-tight mt-1">Autonomous Micro-Vibration Isolation via Sensorless Inductive $(F, L)$ Core Bottoming Observer</h2>
+            <p class="text-xs text-gray-400 mt-1 max-w-3xl">Directly targeted at Habitable Worlds Observatory (HWO) coronagraph 10-picometer wave-front stability requirements and Roman Space Telescope optical jitter suppression.</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-2xl font-mono font-bold text-cyan-400">$225,000</div>
+            <div class="text-xs font-mono text-gray-400">Total Phase I Budget (6 Months)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- University Partner & Budget Breakdown Table -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <div class="md:col-span-5 bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 mb-3">
+              <i data-lucide="graduation-cap" class="w-5 h-5 text-indigo-400"></i>
+              <h3 class="text-sm font-bold text-white">Research Institution Subcontract: 30.0%</h3>
+            </div>
+            <div class="bg-indigo-950/30 border border-indigo-800/40 rounded-xl p-3.5 mb-3">
+              <div class="flex justify-between items-center text-xs font-mono mb-1">
+                <span class="text-indigo-300 font-bold">University of Central Florida (UCF)</span>
+                <span class="text-indigo-400 font-bold">$67,500</span>
+              </div>
+              <p class="text-xs text-gray-400">Center for Advanced Turbomachinery and Energy Research (CATER) & Space Optics Dynamic Lab.</p>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">
+              UCF will provide high-bandwidth cryogenic magnetic core permeameter characterization, laser vibrometer testing down to sub-nanometer bench displacements, and validation inside high-vacuum thermal chambers ($10^{-6}\ \text{Torr}$, $120\ \text{K}$).
+            </p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-gray-800">
+            <div class="text-xs font-mono text-gray-400 mb-2 font-semibold">Phase I Subcontract Allocation Breakdown:</div>
+            <div class="space-y-1.5 text-xs font-mono">
+              <div class="flex justify-between text-gray-300">
+                <span>Co-PI Faculty Effort (Dr. Space Dynamics):</span>
+                <span>$24,000</span>
+              </div>
+              <div class="flex justify-between text-gray-300">
+                <span>Graduate Research Assistant (1 GRA, 6 Mo):</span>
+                <span>$26,500</span>
+              </div>
+              <div class="flex justify-between text-gray-300">
+                <span>Cryo-Chamber & High-Vib Optical Test Time:</span>
+                <span>$17,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="md:col-span-7 bg-space-900/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 mb-3">
+              <i data-lucide="calendar" class="w-5 h-5 text-cyan-400"></i>
+              <h3 class="text-sm font-bold text-white">6-Month Phase I Work Breakdown Structure (WBS)</h3>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div class="bg-gray-950/60 border border-gray-800 p-2.5 rounded-lg flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 mt-0.5">M1–M2</span>
+                <div>
+                  <span class="font-bold text-white block">WBS 1.0: Non-Linear Reluctance & Inductance Mapping</span>
+                  <span class="text-gray-400">Finite element electromagnetic simulation (Maxwell 3D) of voice coil saturation thresholds and temperature-dependent Hiperco-50A B-H loops.</span>
+                </div>
+              </div>
+
+              <div class="bg-gray-950/60 border border-gray-800 p-2.5 rounded-lg flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 mt-0.5">M3–M4</span>
+                <div>
+                  <span class="font-bold text-white block">WBS 2.0: $(F, L)$ High-Frequency Ripple Observer Formulation</span>
+                  <span class="text-gray-400">Implement real-time FPGA-based differential inductance demodulator using 10 kHz probing waveforms; validate $\Psi_{\text{sat}}$ detection reliability.</span>
+                </div>
+              </div>
+
+              <div class="bg-gray-950/60 border border-gray-800 p-2.5 rounded-lg flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 mt-0.5">M4–M5</span>
+                <div>
+                  <span class="font-bold text-white block">WBS 3.0: Closed-Loop Jitter Controller & Harmonic Avoidance</span>
+                  <span class="text-gray-400">Integrate null-space momentum wheel speed reallocation algorithm; demonstrate sub-picometer telescope jitter during simulated bearing imbalance spikes.</span>
+                </div>
+              </div>
+
+              <div class="bg-gray-950/60 border border-gray-800 p-2.5 rounded-lg flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 mt-0.5">M6</span>
+                <div>
+                  <span class="font-bold text-white block">WBS 4.0: Hardware Bench Test & Phase II Flight Transition Plan</span>
+                  <span class="text-gray-400">TRL-4 physical validation on 6-DOF hexapod isolator rig at UCF CATER facility; deliver Phase II transition package for flight-qualification ($850k–$1.2M).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-2 text-[11px] font-mono text-gray-500 flex justify-between">
+            <span>NASA Deliverables: Final Report, DSP Observer VHDL IP Core, UCF Test Log</span>
+            <span class="text-cyan-400">Phase II Target: TRL-6 Vacuum Flight Test</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: COMMERCIAL & NATIONWIDE ARR BREAKDOWN-->
+    <!-- ========================================== -->
+    <div id="viewARR" class="hidden space-y-6">
+      
+      <!-- Executive Commercial Summary -->
+      <div class="bg-space-900/90 border border-gray-800 rounded-2xl p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-700 rounded font-semibold">Civil & Commercial Dual-Use Focus</span>
+              <span class="px-2.5 py-0.5 text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 rounded">100% Non-Defense Civil Software Runtime</span>
+            </div>
+            <h2 class="text-xl font-bold text-white tracking-tight mt-1">Enterprise Software TAM: Sensorless Magnetic Health & Vibration Observer</h2>
+            <p class="text-xs text-gray-400 mt-1 max-w-3xl">Direct license model applied to industrial magnetic levitation, semiconductor wafer steppers, space constellation reaction wheels, and medical imaging cryostats.</p>
+          </div>
+          <div class="text-right">
+            <div class="text-3xl font-mono font-bold text-emerald-400">$218.4M</div>
+            <div class="text-xs font-mono text-gray-400">Total Mature Annual Recurring Revenue (ARR)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARR Vertical Distribution Table -->
+      <div class="bg-space-900/80 border border-gray-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i data-lucide="table" class="w-4 h-4 text-emerald-400"></i>
+            Commercial Market Segment Breakdown (5-Year Ramp)
+          </h3>
+          <span class="text-xs font-mono text-gray-400">Asset-Based SaaS / Real-time Embedded License</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-gray-950/80 text-gray-400 uppercase text-[11px] border-b border-gray-800">
+              <tr>
+                <th class="p-3.5">Commercial Vertical</th>
+                <th class="p-3.5">Primary Target Application</th>
+                <th class="p-3.5">Software Runtime Metric</th>
+                <th class="p-3.5">Active Asset Base</th>
+                <th class="p-3.5 text-right">Mature Annual ARR</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800/60 text-gray-300">
+              <tr class="hover:bg-gray-800/20 transition">
+                <td class="p-3.5 font-bold text-white flex items-center gap-2">
+                  <i data-lucide="microchip" class="w-3.5 h-3.5 text-cyan-400"></i>
+                  Semiconductor EUV Steppers
+                </td>
+                <td class="p-3.5">Sub-nanometer magnetic levitation stages for 2nm/sub-2nm lithography</td>
+                <td class="p-3.5 text-cyan-300">$45,000 / machine / year</td>
+                <td class="p-3.5">1,240 lithography tools</td>
+                <td class="p-3.5 text-right font-bold text-emerald-400">$55.8M</td>
+              </tr>
+              <tr class="hover:bg-gray-800/20 transition">
+                <td class="p-3.5 font-bold text-white flex items-center gap-2">
+                  <i data-lucide="satellite" class="w-3.5 h-3.5 text-indigo-400"></i>
+                  Commercial LEO Constellations
+                </td>
+                <td class="p-3.5">Optical inter-satellite laser communications (ISL) reaction wheel jitter isolation</td>
+                <td class="p-3.5 text-indigo-300">$3,200 / satellite / year</td>
+                <td class="p-3.5">18,500 LEO satellites</td>
+                <td class="p-3.5 text-right font-bold text-emerald-400">$59.2M</td>
+              </tr>
+              <tr class="hover:bg-gray-800/20 transition">
+                <td class="p-3.5 font-bold text-white flex items-center gap-2">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 text-purple-400"></i>
+                  Civil Earth Observation
+                </td>
+                <td class="p-3.5">High-resolution sub-30cm commercial imaging payloads & line-of-sight stabilization</td>
+                <td class="p-3.5 text-purple-300">$18,000 / spacecraft / year</td>
+                <td class="p-3.5">1,650 spacecraft</td>
+                <td class="p-3.5 text-right font-bold text-emerald-400">$29.7M</td>
+              </tr>
+              <tr class="hover:bg-gray-800/20 transition">
+                <td class="p-3.5 font-bold text-white flex items-center gap-2">
+                  <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  Cryogenic High-Field MRI
+                </td>
+                <td class="p-3.5">Pulse-tube cold head acoustic vibration cancellation in ultra-high-field 7T+ MRI</td>
+                <td class="p-3.5 text-emerald-300">$7,500 / clinical scanner / year</td>
+                <td class="p-3.5">5,400 clinical scanners</td>
+                <td class="p-3.5 text-right font-bold text-emerald-400">$40.5M</td>
+              </tr>
+              <tr class="hover:bg-gray-800/20 transition">
+                <td class="p-3.5 font-bold text-white flex items-center gap-2">
+                  <i data-lucide="wind" class="w-3.5 h-3.5 text-amber-400"></i>
+                  Active Maglev Turbomachinery
+                </td>
+                <td class="p-3.5">Sensorless magnetic bearing bottoming prevention in supercritical $CO_2$ civil turbines</td>
+                <td class="p-3.5 text-amber-300">$12,000 / compressor unit / year</td>
+                <td class="p-3.5">2,770 civil energy units</td>
+                <td class="p-3.5 text-right font-bold text-emerald-400">$33.2M</td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-gray-950 text-white font-bold border-t border-gray-800">
+              <tr>
+                <td colspan="4" class="p-3.5 text-right uppercase text-gray-400">Total Projected Annual License ARR:</td>
+                <td class="p-3.5 text-right font-mono text-emerald-400 text-sm">$218.4M</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Industry Deep-Dive Cards (The Physics & Why Others Missed This) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Card 1: Semiconductor Lithography -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5">
+          <div class="flex items-center space-x-2 text-cyan-400 mb-2">
+            <i data-lucide="microchip" class="w-4 h-4"></i>
+            <h4 class="text-sm font-bold text-white">Semiconductor Photolithography (2nm EUV Tools)</h4>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-cyan-400 font-bold block mb-1">Physics in 1 Sentence:</span>
+              <span class="text-gray-300">As reticle acceleration exceeds 12g in wafer steppers, voice-coil actuators hit peak current where coil inductance collapses by 40%, degrading closed-loop phase margin right at nanometer settling.</span>
+            </div>
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-amber-400 font-bold block mb-1">Why Incumbents Missed This (Plain English):</span>
+              <span class="text-gray-300">Incumbent semiconductor toolmakers assumed voice-coil inductance was constant and added heavy capacitive linear encoders that add thermal drift and require millions of dollars in cleanroom calibration.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: LEO Constellations & Optical Inter-Satellite Links -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5">
+          <div class="flex items-center space-x-2 text-indigo-400 mb-2">
+            <i data-lucide="satellite" class="w-4 h-4"></i>
+            <h4 class="text-sm font-bold text-white">Commercial LEO Constellations (Laser Comms)</h4>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-indigo-400 font-bold block mb-1">Physics in 1 Sentence:</span>
+              <span class="text-gray-300">Micro-radian laser optical communication terminals break lock whenever reaction wheel harmonics cross telescope mounting resonance during rapid attitude momentum desaturations.</span>
+            </div>
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-amber-400 font-bold block mb-1">Why Incumbents Missed This (Plain English):</span>
+              <span class="text-gray-300">Commercial satellite operators simply accept random laser link dropouts or rely on passive elastomeric rubber mounts that harden, outgas, and crack in the harsh thermal cycles of low-Earth orbit.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Ultra-High-Field MRI Diagnostics -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5">
+          <div class="flex items-center space-x-2 text-emerald-400 mb-2">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+            <h4 class="text-sm font-bold text-white">High-Field 7T+ Clinical MRI (Acoustic Noise)</h4>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-emerald-400 font-bold block mb-1">Physics in 1 Sentence:</span>
+              <span class="text-gray-300">Cryocooler pulse-tube piston oscillations inject 1.4 Hz acoustic pulses into the superconducting helium bath that saturate magnetic counter-balance actuators and distort sub-millimeter brain scans.</span>
+            </div>
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-amber-400 font-bold block mb-1">Why Incumbents Missed This (Plain English):</span>
+              <span class="text-gray-300">Hospitals install expensive room-scale concrete seismic slabs because MRI manufacturers don't incorporate real-time inductive observer software into their standard cryostat dampening coils.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Supercritical CO2 Maglev Turbomachinery -->
+        <div class="bg-space-900/80 border border-gray-800 rounded-2xl p-5">
+          <div class="flex items-center space-x-2 text-amber-400 mb-2">
+            <i data-lucide="wind" class="w-4 h-4"></i>
+            <h4 class="text-sm font-bold text-white">Clean Energy Supercritical $CO_2$ Turbines</h4>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-amber-400 font-bold block mb-1">Physics in 1 Sentence:</span>
+              <span class="text-gray-300">High-density supercritical fluid surges push magnetic bearing shafts close to stator walls where differential flux density hits saturation and destroys backup catcher bearings.</span>
+            </div>
+            <div class="bg-gray-950/50 p-2.5 rounded-lg border border-gray-850">
+              <span class="text-amber-400 font-bold block mb-1">Why Incumbents Missed This (Plain English):</span>
+              <span class="text-gray-300">Turbine operators use slow thermal sensors or mechanical trip switches that only react after catastrophic physical contact has already gouged the shaft.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Enterprise Valuation & Direct CTA -->
+      <div class="bg-gradient-to-r from-space-900 via-gray-900 to-space-900 border border-gray-800 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest block mb-1">Enterprise Software Valuation</span>
+          <h3 class="text-xl font-bold text-white">$1.75B – $2.62B Deep-Tech Enterprise Valuation</h3>
+          <p class="text-xs text-gray-400 mt-1 max-w-xl">
+            Based on a standard 8x–12x software multiple applied to $218.4M mature ARR across critical civil satellite infrastructure and next-generation extreme ultraviolet semiconductor tooling.
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+          <a href="mailto:support@rfwavecode.com" class="px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-space-950 font-bold text-xs font-mono transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>Contact Core Licensing: support@rfwavecode.com</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800/80 bg-space-950 py-4 text-xs font-mono text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>NASA SBIR Topic S1.02 Precision Pointing & Vibration Isolation | MagnetoDamper Autonomous Observer</div>
+      <div class="flex items-center space-x-4">
+        <span>TRL-4 / TR-6 Architecture</span>
+        <span>•</span>
+        <a href="mailto:support@rfwavecode.com" class="text-cyan-400 hover:underline">support@rfwavecode.com</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT: SIMULATION, OBSERVER & CHARTS -->
+  <!-- ========================================== -->
+  <script>
+    // Tab Switching Mapping
+    const tabMapping = {
+      'sim': { viewId: 'viewSim', btnId: 'tabBtnSim' },
+      'physics': { viewId: 'viewPhysics', btnId: 'tabBtnPhysics' },
+      'proposal': { viewId: 'viewProposal', btnId: 'tabBtnProposal' },
+      'arr': { viewId: 'viewARR', btnId: 'tabBtnARR' }
+    };
+
+    function switchTab(activeKey) {
+      Object.keys(tabMapping).forEach(key => {
+        const item = tabMapping[key];
+        const viewEl = document.getElementById(item.viewId);
+        const btnEl = document.getElementById(item.btnId);
+        
+        if (key === activeKey) {
+          viewEl.classList.remove('hidden');
+          btnEl.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-1.5";
+        } else {
+          viewEl.classList.add('hidden');
+          btnEl.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 flex items-center gap-1.5";
+        }
+      });
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise();
+      }
+
+      if (activeKey === 'sim') {
+        setTimeout(() => {
+          resizeCanvas();
+        }, 50);
+      }
+    }
+
+    // Physical Simulation State
+    const simState = {
+      // Dynamic parameters
+      wheelSpeed: 3420, // RPM
+      wheelSpeedTarget: 3420,
+      imbalance: 1.25, // g·cm
+      gain: 140, // N·s/m
+      autonomousMode: true,
+      benchResonanceFreq: 74.0, // Hz
+      
+      // Actuator state
+      displacement: 0.0, // mm (air gap deviation)
+      velocity: 0.0,
+      dampingForce: 0.0, // N
+      coilInductance: 22.40, // mH
+      isSaturated: false,
+      saturationMetric: 0.0, // 0.0 to 1.0
+      slewActive: false,
+      slewTimer: 0,
+      
+      // Trajectory buffer for F-L chart
+      flHistory: [],
+      timeTick: 0,
+      
+      // Jitter History (time-series)
+      jitterHistory: Array(30).fill(0.12),
+      harmonicHistory: Array(30).fill(57.0)
+    };
+
+    // Canvas Setup
+    const canvas = document.getElementById('hardwareCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width || 600;
+      const h = rect.height || 320;
+      canvas.width = w * window.devicePixelRatio;
+      canvas.height = h * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialize Chart.js Instances
+    let flChart, jitterChart, harmonicChart;
+
+    function initCharts() {
+      // 1. (F, L) Phase-Space Scatter Chart
+      const ctxFL = document.getElementById('flChart').getContext('2d');
+      
+      // Generate Nominal Corridor Curve Data
+      const nominalCurve = [];
+      for (let f = -12; f <= 12; f += 0.5) {
+        // High Permeability linear curve
+        const l = 22.40 - 0.08 * Math.pow(f, 2);
+        nominalCurve.push({ x: f, y: Math.max(l, 8.5) });
+      }
+
+      flChart = new Chart(ctxFL, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Live Trajectory',
+              data: [],
+              borderColor: '#06b6d4',
+              backgroundColor: '#06b6d4',
+              showLine: true,
+              borderWidth: 2,
+              pointRadius: (ctx) => {
+                const index = ctx.dataIndex;
+                const total = ctx.dataset.data.length;
+                return index === total - 1 ? 6 : 2;
+              },
+              pointBackgroundColor: (ctx) => {
+                const index = ctx.dataIndex;
+                const total = ctx.dataset.data.length;
+                return index === total - 1 ? '#38bdf8' : 'rgba(6, 182, 212, 0.4)';
+              },
+              tension: 0.2
+            },
+            {
+              label: 'Linear Damping Corridor',
+              data: nominalCurve,
+              borderColor: 'rgba(52, 211, 153, 0.4)',
+              borderDash: [4, 4],
+              pointRadius: 0,
+              showLine: true,
+              borderWidth: 1.5,
+              fill: false
+            },
+            {
+              label: 'Saturation Hazard Zone ($L < 12\\text{ mH}$)',
+              data: [
+                { x: -14, y: 12 }, { x: 14, y: 12 }
+              ],
+              borderColor: 'rgba(239, 68, 68, 0.7)',
+              borderDash: [6, 4],
+              pointRadius: 0,
+              showLine: true,
+              borderWidth: 1.5,
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              fill: 'start'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Active Damping Counter-Force F (N)',
+                color: '#94a3b8',
+                font: { family: 'JetBrains Mono', size: 10 }
+              },
+              min: -14,
+              max: 14,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Differential Inductance L (mH)',
+                color: '#94a3b8',
+                font: { family: 'JetBrains Mono', size: 10 }
+              },
+              min: 6,
+              max: 24,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                boxWidth: 10,
+                color: '#cbd5e1',
+                font: { family: 'Inter', size: 10 }
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Jitter Time-Series Chart
+      const ctxJitter = document.getElementById('jitterChart').getContext('2d');
+      jitterChart = new Chart(ctxJitter, {
+        type: 'line',
+        data: {
+          labels: Array(30).fill(''),
+          datasets: [{
+            label: 'Bench Acceleration (μg RMS)',
+            data: simState.jitterHistory,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          scales: {
+            x: { display: false },
+            y: {
+              min: 0,
+              max: 8.0,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // 3. Harmonic Tracking Chart
+      const ctxHarmonic = document.getElementById('harmonicChart').getContext('2d');
+      harmonicChart = new Chart(ctxHarmonic, {
+        type: 'line',
+        data: {
+          labels: Array(30).fill(''),
+          datasets: [
+            {
+              label: 'RWA 1st Harmonic (Hz)',
+              data: simState.harmonicHistory,
+              borderColor: '#818cf8',
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.2
+            },
+            {
+              label: 'Optical Bench Natural Mode (74.0 Hz)',
+              data: Array(30).fill(74.0),
+              borderColor: 'rgba(245, 158, 11, 0.7)',
+              borderDash: [5, 4],
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          scales: {
+            x: { display: false },
+            y: {
+              min: 20,
+              max: 90,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                boxWidth: 10,
+                color: '#cbd5e1',
+                font: { family: 'Inter', size: 10 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Physics Update Step
+    let chartThrottle = 0;
+    function stepPhysics() {
+      simState.timeTick += 0.04;
+      
+      // Wheel Speed Transition if Slew Active
+      if (Math.abs(simState.wheelSpeed - simState.wheelSpeedTarget) > 1) {
+        simState.wheelSpeed += (simState.wheelSpeedTarget - simState.wheelSpeed) * 0.12;
+      } else {
+        simState.wheelSpeed = simState.wheelSpeedTarget;
+        if (simState.slewActive) {
+          simState.slewActive = false;
+          document.getElementById('harmonicShiftAlert').classList.add('hidden');
+        }
+      }
+
+      // Wheel Harmonic Frequency (Hz)
+      const wheelFreq = simState.wheelSpeed / 60.0;
+      
+      // Imbalance Disturbance Force Amplitude
+      // F_dist = m * r * omega^2
+      const omega = 2 * Math.PI * wheelFreq;
+      const imbalanceKgM = (simState.imbalance * 1e-3 * 1e-2); // g·cm to kg·m
+      const fDistAmp = imbalanceKgM * Math.pow(omega, 2) * 8.5; // Scaled for demonstration
+      const fDisturbance = fDistAmp * Math.sin(omega * simState.timeTick);
+
+      // Proximity to resonance
+      const deltaF = Math.abs(wheelFreq - simState.benchResonanceFreq);
+      const resonanceAmpFactor = 1.0 + (deltaF < 12.0 ? (12.0 - deltaF) * 0.85 : 0);
+
+      // Effective Actuator Dynamic Force
+      const totalRawForce = (fDisturbance * resonanceAmpFactor) + (Math.sin(simState.timeTick * 1.5) * 1.2);
+      
+      // Coil Gap Displacement Dynamics
+      const effectiveStiffness = 45000; // N/m
+      simState.displacement = (totalRawForce / (effectiveStiffness + simState.gain * 120)) * 1000; // in mm
+      simState.dampingForce = -simState.gain * (simState.displacement * 0.06);
+
+      // Core Permeability & Inductance Calculation (Saturation Knee)
+      // As force or displacement increases, ferromagnetic core enters saturation
+      const forceMag = Math.abs(simState.dampingForce);
+      const displacementMag = Math.abs(simState.displacement);
+      
+      // Inductance model: High permeability (22.4 mH) dropping to air-core limit (~7.2 mH)
+      const saturationDrive = (forceMag / 6.8) + (displacementMag / 0.85);
+      
+      let currentL;
+      if (saturationDrive < 0.85) {
+        // Linear zone
+        currentL = 22.40 - 2.8 * Math.pow(saturationDrive, 2);
+      } else {
+        // Saturation knee flattening
+        const excess = saturationDrive - 0.85;
+        currentL = 20.38 - (13.1 * (excess / (excess + 0.45)));
+      }
+      simState.coilInductance = Math.max(7.2, currentL);
+
+      // Observer Imminent Bottoming Metric: Psi_sat
+      // Detects sudden loss of differential inductance (dL/dF -> 0)
+      simState.saturationMetric = Math.min(1.0, Math.max(0.0, (22.40 - simState.coilInductance) / (22.40 - 8.5)));
+      simState.isSaturated = simState.saturationMetric >= 0.78;
+
+      // Autonomous Escape Mechanism: Slew RWA speed away from resonant modes
+      if (simState.autonomousMode && simState.isSaturated && !simState.slewActive) {
+        simState.slewActive = true;
+        document.getElementById('harmonicShiftAlert').classList.remove('hidden');
+
+        // Shift wheel speed away from 74Hz (4440 RPM)
+        if (simState.wheelSpeed > 4000) {
+          simState.wheelSpeedTarget = 2800; // Downshift to safe 46.6 Hz
+        } else {
+          simState.wheelSpeedTarget = 5100; // Upshift to safe 85 Hz
+        }
+        document.getElementById('sliderSpeed').value = Math.round(simState.wheelSpeedTarget);
+        document.getElementById('sliderSpeedVal').innerText = `${Math.round(simState.wheelSpeedTarget)} RPM`;
+      }
+
+      // Update Phase-Space Trajectory History (Ring buffer 24 points)
+      simState.flHistory.push({ x: Number(simState.dampingForce.toFixed(2)), y: Number(simState.coilInductance.toFixed(2)) });
+      if (simState.flHistory.length > 24) simState.flHistory.shift();
+
+      // Optical Bench Jitter Acceleration calculation (μg RMS)
+      let benchJitterUmg = 0.08 + (deltaF < 4.0 ? (4.0 - deltaF) * 1.6 : 0.04) * (simState.imbalance / 1.25);
+      if (simState.isSaturated) benchJitterUmg += 3.8; // Bottoming strike jitter spike
+      benchJitterUmg += (Math.random() - 0.5) * 0.05;
+
+      // Update Time-Series Buffers
+      chartThrottle++;
+      if (chartThrottle % 3 === 0) {
+        simState.jitterHistory.shift();
+        simState.jitterHistory.push(Math.max(0.02, benchJitterUmg));
+
+        simState.harmonicHistory.shift();
+        simState.harmonicHistory.push(wheelFreq);
+
+        updateCharts();
+        updateDOM();
+      }
+
+      // Render Hardware Graphics on Canvas
+      drawHardwareCanvas();
+    }
+
+    // Canvas Render Function
+    function drawHardwareCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width || 600;
+      const h = rect.height || 320;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background subtle grid
+      ctx.strokeStyle = '#0d1527';
+      ctx.lineWidth = 1;
+      const gridSize = 24;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      const centerY = h * 0.5;
+      const dispPixels = simState.displacement * 40; // visual amplification
+
+      // 1. Fixed Optical Bench Structure (Left Wall & Frame)
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(20, centerY - 110, 35, 220);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, centerY - 110, 35, 220);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px JetBrains Mono';
+      ctx.save();
+      ctx.translate(14, centerY);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('TELESCOPE OPTICAL BENCH', 0, 0);
+      ctx.restore();
+
+      // 2. Voice-Coil Ferromagnetic Core (Pole Piece)
+      const coreX = 65;
+      const coreW = 110;
+      const coreH = 70;
+      
+      // Saturation color glow
+      if (simState.isSaturated) {
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#7f1d1d';
+      } else {
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#0f2942';
+      }
+      
+      ctx.fillRect(coreX, centerY - coreH/2, coreW, coreH);
+      ctx.strokeStyle = simState.isSaturated ? '#f87171' : '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(coreX, centerY - coreH/2, coreW, coreH);
+      ctx.shadowBlur = 0; // reset
+
+      // Core Windings (Copper Coil Stripes)
+      ctx.strokeStyle = simState.isSaturated ? '#fb923c' : '#f59e0b';
+      ctx.lineWidth = 4;
+      for (let wx = coreX + 15; wx < coreX + coreW - 10; wx += 14) {
+        ctx.beginPath();
+        ctx.moveTo(wx, centerY - coreH/2 - 6);
+        ctx.lineTo(wx, centerY + coreH/2 + 6);
+        ctx.stroke();
+      }
+
+      // 3. Dynamic Air Gap & Magnetic Flux Lines
+      const gapLeft = coreX + coreW;
+      const gapRight = gapLeft + 65 + dispPixels;
+      
+      ctx.lineWidth = 1.5;
+      const fluxLines = 7;
+      for (let i = 0; i < fluxLines; i++) {
+        const fy = centerY - 25 + (i * 8.5);
+        ctx.strokeStyle = simState.isSaturated ? 'rgba(239, 68, 68, 0.7)' : 'rgba(6, 182, 212, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(gapLeft, fy);
+        ctx.lineTo(gapRight, fy);
+        ctx.stroke();
+
+        // Flux arrow
+        ctx.fillStyle = simState.isSaturated ? '#ef4444' : '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(gapLeft + 30, fy - 3);
+        ctx.lineTo(gapLeft + 36, fy);
+        ctx.lineTo(gapLeft + 30, fy + 3);
+        ctx.fill();
+      }
+
+      // 4. Moving Stator / Reaction Wheel Assembly (RWA) Body
+      const rwaX = gapRight;
+      const rwaW = 140;
+      const rwaH = 160;
+
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(rwaX, centerY - rwaH/2, rwaW, rwaH);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rwaX, centerY - rwaH/2, rwaW, rwaH);
+
+      // Rotating Wheel Graphic inside RWA Housing
+      const wheelCenterX = rwaX + 70;
+      const wheelCenterY = centerY;
+      const wheelRadius = 55;
+
+      ctx.save();
+      ctx.translate(wheelCenterX, wheelCenterY);
+      ctx.rotate(simState.timeTick * (simState.wheelSpeed / 60) * 0.25);
+
+      // Outer rim
+      ctx.strokeStyle = '#818cf8';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, wheelRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Spokes & Imbalance mass point
+      ctx.strokeStyle = '#4338ca';
+      ctx.lineWidth = 2;
+      for (let sp = 0; sp < 4; sp++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(sp * Math.PI/2) * wheelRadius, Math.sin(sp * Math.PI/2) * wheelRadius);
+        ctx.stroke();
+      }
+
+      // Imbalance Lump (Disturbance Point)
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(wheelRadius - 10, 0, 5 + simState.imbalance * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Center Hub
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(wheelCenterX, wheelCenterY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Labels on canvas
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText('VOICE-COIL DAMPER', coreX + coreW/2, centerY - coreH/2 - 12);
+      ctx.fillText('REACTION WHEEL FLYWHEEL', wheelCenterX, centerY + rwaH/2 + 16);
+      
+      // Inductance Badge on Core
+      ctx.fillStyle = simState.isSaturated ? '#f87171' : '#34d399';
+      ctx.font = 'bold 11px JetBrains Mono';
+      ctx.fillText(`L = ${simState.coilInductance.toFixed(2)} mH`, coreX + coreW/2, centerY + coreH/2 + 20);
+
+      // Bottoming Crash Warning Marker
+      if (simState.isSaturated) {
+        document.getElementById('canvasAlert').classList.remove('hidden');
+      } else {
+        document.getElementById('canvasAlert').classList.add('hidden');
+      }
+    }
+
+    // Chart Updating Function
+    function updateCharts() {
+      if (!flChart || !jitterChart || !harmonicChart) return;
+
+      // Update FL scatter data
+      flChart.data.datasets[0].data = simState.flHistory;
+      flChart.update('none');
+
+      // Update Jitter & Harmonic lines
+      jitterChart.data.datasets[0].data = simState.jitterHistory;
+      jitterChart.update('none');
+
+      harmonicChart.data.datasets[0].data = simState.harmonicHistory;
+      harmonicChart.update('none');
+    }
+
+    // DOM Telemetry Update
+    function updateDOM() {
+      document.getElementById('statForce').innerText = `${simState.dampingForce >= 0 ? '+' : ''}${simState.dampingForce.toFixed(2)} N`;
+      document.getElementById('statInductance').innerText = `${simState.coilInductance.toFixed(2)} mH`;
+      document.getElementById('statSpeed').innerText = `${Math.round(simState.wheelSpeed)} RPM`;
+
+      const wheelFreq = (simState.wheelSpeed / 60.0).toFixed(1);
+      document.getElementById('statSpeedMode').innerText = `Harmonic: ${wheelFreq} Hz (Bench mode: 74.0 Hz)`;
+      document.getElementById('canvasDispText').innerText = `${Math.abs(simState.displacement).toFixed(3)} mm`;
+
+      // Status Badge
+      const badge = document.getElementById('statStateBadge');
+      const sub = document.getElementById('statStateSub');
+      const diff = document.getElementById('statInductanceDiff');
+      
+      if (simState.isSaturated) {
+        badge.className = "text-base font-bold font-mono text-red-400 flex items-center gap-1.5 animate-pulse";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-400"></span><span>CORE SATURATION!</span>`;
+        sub.innerText = "Imminent bottoming: Phase margin lost";
+        diff.innerText = "Differential dL/dF ≈ 0 (Knee collapsed)";
+        diff.className = "text-[11px] text-red-400 font-bold";
+      } else if (simState.saturationMetric > 0.45) {
+        badge.className = "text-base font-bold font-mono text-amber-400 flex items-center gap-1.5";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span>APPROACHING KNEE</span>`;
+        sub.innerText = "Permeability decreasing; observer tracking";
+        diff.innerText = "Incremental reluctance rising";
+        diff.className = "text-[11px] text-amber-400";
+      } else {
+        badge.className = "text-base font-bold font-mono text-emerald-400 flex items-center gap-1.5";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span>LINEAR DAMPING</span>`;
+        sub.innerText = "Jitter isolation: -42.8 dB";
+        diff.innerText = "Nominal Permeability (μ_r)";
+        diff.className = "text-[11px] text-emerald-500/80";
+      }
+
+      // Jitter tag
+      const latestJitter = simState.jitterHistory[simState.jitterHistory.length - 1];
+      const jitterTag = document.getElementById('jitterDbTag');
+      jitterTag.innerText = `${latestJitter.toFixed(2)} μg RMS`;
+      if (latestJitter > 2.0) {
+        jitterTag.className = "text-xs font-mono text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 font-bold";
+      } else {
+        jitterTag.className = "text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800";
+      }
+
+      // Harmonic Delta Tag
+      const deltaF = Math.abs((simState.wheelSpeed / 60.0) - simState.benchResonanceFreq);
+      const harmTag = document.getElementById('harmonicTag');
+      harmTag.innerText = `Δf_safe = ${deltaF.toFixed(1)} Hz`;
+      if (deltaF < 4.0) {
+        harmTag.className = "text-xs font-mono text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800 font-bold";
+      } else {
+        harmTag.className = "text-xs font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-800";
+      }
+    }
+
+    // User Control Sliders Input
+    function updateControls() {
+      const speedSlider = document.getElementById('sliderSpeed');
+      simState.wheelSpeedTarget = parseFloat(speedSlider.value);
+      document.getElementById('sliderSpeedVal').innerText = `${Math.round(simState.wheelSpeedTarget)} RPM`;
+
+      const imbSlider = document.getElementById('sliderImbalance');
+      simState.imbalance = parseFloat(imbSlider.value);
+      document.getElementById('sliderImbalanceVal').innerText = `${simState.imbalance.toFixed(2)} g·cm`;
+      document.getElementById('statImbalance').innerText = `${simState.imbalance.toFixed(2)} g·cm`;
+
+      const gainSlider = document.getElementById('sliderGain');
+      simState.gain = parseFloat(gainSlider.value);
+      document.getElementById('sliderGainVal').innerText = `${simState.gain} N·s/m`;
+    }
+
+    // Fault Injection Scenarios
+    function injectSlewResonance() {
+      // Force wheel speed directly into optical bench resonance at 74 Hz (4440 RPM)
+      simState.wheelSpeedTarget = 4440;
+      document.getElementById('sliderSpeed').value = 4440;
+      document.getElementById('sliderSpeedVal').innerText = '4,440 RPM';
+    }
+
+    function injectBearingRumble() {
+      simState.imbalance = 4.8;
+      document.getElementById('sliderImbalance').value = 4.8;
+      document.getElementById('sliderImbalanceVal').innerText = '4.80 g·cm';
+      document.getElementById('statImbalance').innerText = '4.80 g·cm';
+    }
+
+    function injectMagneticBottoming() {
+      simState.wheelSpeedTarget = 4440;
+      simState.imbalance = 5.6;
+      simState.gain = 280;
+      document.getElementById('sliderSpeed').value = 4440;
+      document.getElementById('sliderSpeedVal').innerText = '4,440 RPM';
+      document.getElementById('sliderImbalance').value = 5.6;
+      document.getElementById('sliderImbalanceVal').innerText = '5.60 g·cm';
+      document.getElementById('sliderGain').value = 280;
+      document.getElementById('sliderGainVal').innerText = '280 N·s/m';
+      document.getElementById('statImbalance').innerText = '5.60 g·cm';
+    }
+
+    function restoreNominal() {
+      simState.wheelSpeedTarget = 3420;
+      simState.imbalance = 1.25;
+      simState.gain = 140;
+      document.getElementById('sliderSpeed').value = 3420;
+      document.getElementById('sliderSpeedVal').innerText = '3,420 RPM';
+      document.getElementById('sliderImbalance').value = 1.25;
+      document.getElementById('sliderImbalanceVal').innerText = '1.25 g·cm';
+      document.getElementById('sliderGain').value = 140;
+      document.getElementById('sliderGainVal').innerText = '140 N·s/m';
+      document.getElementById('statImbalance').innerText = '1.25 g·cm';
+      document.getElementById('harmonicShiftAlert').classList.add('hidden');
+    }
+
+    function resetTelemetry() {
+      restoreNominal();
+      simState.flHistory = [];
+      simState.jitterHistory = Array(30).fill(0.12);
+      simState.harmonicHistory = Array(30).fill(57.0);
+    }
+
+    function toggleAutonomous() {
+      simState.autonomousMode = !simState.autonomousMode;
+      const btn = document.getElementById('btnAutonomous');
+      if (simState.autonomousMode) {
+        btn.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 flex items-center gap-2";
+        btn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>AUTONOMOUS SHIFT: ACTIVE</span>`;
+      } else {
+        btn.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 flex items-center gap-2";
+        btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4 text-gray-400"></i><span>AUTONOMOUS SHIFT: OFF</span>`;
+      }
+      lucide.createIcons();
+    }
+
+    // System Startup
+    window.onload = function() {
+      lucide.createIcons();
+      resizeCanvas();
+      initCharts();
+      setInterval(stepPhysics, 40);
+    };
+  </script>
+</body>
+</html>
